@@ -1,0 +1,68 @@
+// trackerProjects: immutable owner UID; member UID -> role; invite email -> role;
+// items list (1–1000 entries); nonnegative revision incremented on content edits.
+// The trusted admin custom claim grants administration of tracker projects only.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /trackerProjects/{projectId} {
+      // Only the OTP service can create a grant. A new primary sign-in never inherits it.
+      function activeGrant(id) {
+        let grant = get(/databases/$(database)/documents/_otpSessions/$(id)).data;
+        return grant.uid == request.auth.uid
+          && grant.email == request.auth.token.email.lower()
+          && grant.expiresAt > request.time.toMillis();
+      }
+      function verifiedWithEmailCode() {
+        return request.auth != null
+          && request.auth.token.get('email_verified', false) == true
+          && request.auth.token.firebase.get('sign_in_provider', '') == 'custom'
+          && request.auth.token.get('overviewOtpSession', '') is string
+          && request.auth.token.get('overviewOtpSession', '').matches('^[a-f0-9-]{36}$')
+          && activeGrant(request.auth.token.overviewOtpSession);
+      }
+      function administrator() {
+        return request.auth.token.get('admin', false) == true;
+      }
+      function role(value) {
+        return value in ['admin', 'editor', 'viewer'];
+      }
+      function membership() {
+        return resource.data.members.get(request.auth.uid, '');
+      }
+      function valid(data) {
+        return data.keys().hasAll(['owner', 'members', 'invites', 'items', 'revision'])
+          && data.keys().hasOnly(['owner', 'members', 'invites', 'items', 'revision'])
+          && data.owner is string && data.members is map && data.invites is map
+          && data.members[data.owner] == 'admin'
+          && data.items is list && data.items.size() > 0 && data.items.size() <= 1000
+          && data.revision is int && data.revision >= 0;
+      }
+      function acceptingInvite(next) {
+        let email = request.auth.token.get('email', '').lower();
+        let granted = resource.data.invites.get(email, '');
+        return membership() == '' && role(granted)
+          && next.diff(resource.data).affectedKeys().hasOnly(['members', 'invites'])
+          && next.members.diff(resource.data.members).affectedKeys().hasOnly([request.auth.uid])
+          && next.members[request.auth.uid] == granted
+          && next.invites.diff(resource.data.invites).affectedKeys().hasOnly([email])
+          && !(email in next.invites);
+      }
+      allow get, list: if verifiedWithEmailCode() && (administrator() || role(resource.data.members[request.auth.uid]));
+      allow create: if verifiedWithEmailCode() && valid(request.resource.data)
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.members.keys().hasOnly([request.auth.uid])
+        && request.resource.data.invites.size() == 0
+        && request.resource.data.revision == 0;
+      allow update: if verifiedWithEmailCode() && valid(request.resource.data)
+        && request.resource.data.owner == resource.data.owner
+        && (
+          ((administrator() || membership() in ['admin', 'editor'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['items', 'revision'])
+            && request.resource.data.revision == resource.data.revision + 1)
+          || ((administrator() || membership() == 'admin')
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'invites']))
+          || acceptingInvite(request.resource.data)
+        );
+    }
+  }
+}

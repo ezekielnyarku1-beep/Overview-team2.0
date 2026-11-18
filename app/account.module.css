@@ -1,0 +1,11 @@
+.page{min-height:100dvh;display:grid;place-items:center;padding:40px 20px;background:#f5f7f2}
+.card{width:100%;max-width:410px;background:#fff;padding:36px;border:1px solid #e3e8df;border-radius:14px;box-shadow:0 12px 45px #243d2b06}
+.form{margin-top:34px}.form h1{font-size:26px;letter-spacing:-.8px;margin-bottom:28px;font-weight:700}.form>p{line-height:1.7;margin-bottom:22px;overflow-wrap:anywhere}
+.fields{display:flex;flex-direction:column;gap:9px;margin-bottom:24px}.fields label{font-size:12px;font-weight:600}.fields>input{margin-bottom:12px}.fields input{width:100%;min-height:46px;border:1px solid #dce2da;border-radius:7px;padding:11px 13px;background:white;color:var(--ink)}.fields input::placeholder{color:#9aa399;font-size:12px}
+.labelRow{display:flex;align-items:center;justify-content:space-between;gap:8px}.password{position:relative}.password input{padding-right:47px}.password>button{position:absolute;right:3px;top:3px;width:40px;height:40px;border:0;background:transparent;color:#758079;display:grid;place-items:center;border-radius:5px}
+.link{border:0;background:transparent;padding:4px 0;color:var(--green);font-size:12px;font-weight:600}.link:hover{text-decoration:underline}.buttons{display:flex;flex-direction:column;gap:14px}.buttons>button{min-height:44px}.divider{display:flex;align-items:center;gap:12px;font-size:11px;color:#8c958b;margin:1px 0}.divider:before,.divider:after{content:"";height:1px;background:#e8ece5;flex:1}.switch{text-align:center;font-size:12px;color:#758079;margin-top:7px}.google{font-size:18px;font-weight:700;font-family:Arial,sans-serif;color:#4285f4}.message{margin-top:20px;font-size:12px;line-height:1.7;background:#f3f6ef;padding:12px;border-radius:7px;overflow-wrap:anywhere}
+@media(max-width:480px){.page{padding:24px 16px}.card{padding:28px 24px}.form{margin-top:28px}}
+
+.fields select{width:100%;min-height:46px;border:1px solid #dce2da;border-radius:7px;padding:10px 13px;background:white;color:var(--ink)}
+.fields input[inputmode="numeric"]{font-variant-numeric:tabular-nums;letter-spacing:.18em}
+@media(max-width:480px){.fields input,.fields select{font-size:16px}.form h1{margin-bottom:18px}}
